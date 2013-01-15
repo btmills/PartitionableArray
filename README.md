@@ -4,7 +4,7 @@ This is an implementation of an array whose elements can be classified by a func
 
 ## Implementations
 
-Only one implementation has been completed so far, in C. See the C directory for more information.
+Two implementations have been tried so far: C and C#. See the corresponding directories for more information.
 
 ## Design Tradeoffs
 
