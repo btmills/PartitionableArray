@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 	while(pa_interesting(arr))
 	{
 		int index = pa_any(arr);
-		printf("%2d is interesting. Setting equal to 0...", pa_get(arr, index));
+		printf("%2d is interesting. Setting equal to 0...\n", pa_get(arr, index));
 		pa_set(arr, index, 0);
 	}
 	printf("Array is %sinteresting.\n", pa_interesting(arr) ? "" : "not ");

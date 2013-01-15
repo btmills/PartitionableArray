@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include "pa.h"
 
@@ -73,12 +72,8 @@ void pa_set(PArray* this, unsigned int index, int value)
 {
 	this->elements[index].value = value;
 
-	printf("Array[%u] = %d", index, value);
-
 	if(this->test(value))
 	{
-		printf(" and is interesting.\n");
-
 		if(!this->elements[index].interesting)
 		{
 			// Add element to beginning of interesting list
@@ -101,7 +96,6 @@ void pa_set(PArray* this, unsigned int index, int value)
 	}
 	else
 	{
-		printf(".\n");
 		if(this->elements[index].interesting)
 		{
 			// Remove from interesting list
