@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -fnested-functions
 LDFLAGS = $(CFLAGS)
 
 all: test
