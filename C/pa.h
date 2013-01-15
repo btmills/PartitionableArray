@@ -33,7 +33,7 @@ PArray* pa_new();
 PArray* pa_ctor(PArray* this, bool (*fn)(int), unsigned int capacity);
 
 /*
- * Destructs a PArray and free its memory.
+ * Destructs a PArray and frees its memory.
  * Don't forget to set the pointer to NULL after calling this.
  *
  * this: PArray to destruct
@@ -74,7 +74,7 @@ bool pa_interesting(PArray* this);
 
 /*
  * Gets the index of an interesting element of the array.
- * Requries that the array contains at least one interesting element.
+ * Requires that the array contains at least one interesting element.
  *
  * this: PArray containing at least one interesting element
  *
