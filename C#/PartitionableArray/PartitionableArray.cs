@@ -39,24 +39,22 @@ namespace PartitionableArray
 						interesting = arr[index];
 					}
 				} else { // Is not interesting
-					if(arr[index].prev != null
-					   || arr[index].next != null
-					   || (interesting != null && interesting.index == index)) { // Is in list
-						// Remove from interesting list
-						if(interesting.index == index) { // Is head
-							interesting = arr[index].next;
-							arr[index].next = null;
-							if(interesting != null) {
-								interesting.prev = null;
-							}
-						} else { // Is not head
-							arr[index].prev.next = arr[index].next;
-							if(arr[index].next != null) { // Is not tail
-								arr[index].next.prev = arr[index].prev;
-								arr[index].next = null;
-							}
-							arr[index].prev = null;
+					if(interesting != null
+					   && interesting.index == index) { // Is list head
+						// Remove list head
+						interesting = arr[index].next;
+						arr[index].next = null;
+						if(interesting != null) { // List is not empty
+							interesting.prev = null;
 						}
+					} else if(arr[index].prev != null) { // Elsewhere in list
+						// Remove from list
+						arr[index].prev.next = arr[index].next;
+						if(arr[index].next != null) { // Is not tail
+							arr[index].next.prev = arr[index].prev;
+							arr[index].next = null;
+						}
+						arr[index].prev = null;
 					}
 				}
 			}
