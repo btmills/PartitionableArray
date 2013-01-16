@@ -8,18 +8,10 @@
  */
 typedef struct PAElement {
 	int value;
-	struct DLLNode* interesting;
+	int index;
+	struct PAElement* prev;
+	struct PAElement* next;
 } PAElement;
-
-/*
- * Structure representing a node in a doubly-linked list.
- * Contains a single value, index, representing an index in an array.
- */
-typedef struct DLLNode {
-	struct DLLNode* prev;
-	struct DLLNode* next;
-	unsigned int index;
-} DLLNode;
 
 /*
  * Structure representing a partitionable array.
@@ -29,9 +21,9 @@ typedef struct DLLNode {
  */
 struct PArray {
 	unsigned int capacity;
-	DLLNode* interesting;
+	PAElement* interesting;
 	char (*test)(int);
-	PAElement* elements;
+	PAElement* arr;
 };
 
 PArray* pa_new()
@@ -41,89 +33,82 @@ PArray* pa_new()
 
 PArray* pa_ctor(PArray* this, char (*fn)(int), unsigned int capacity)
 {
+	unsigned int i;
+
 	this->capacity = capacity;
 	this->test = fn;
-	this->elements = calloc(capacity, sizeof(PAElement));
+	this->arr = calloc(capacity, sizeof(PAElement));
+	for(i = 0; i < capacity; i++)
+	{
+		this->arr[i].index = i;
+	}
 
 	return this; // Facilitate chaining or nesting
 }
 
 void* pa_dtor(PArray* this)
 {
-	// Free interesting list
-	while(this->interesting)
-	{
-		DLLNode* next = this->interesting->next;
-		free(this->interesting);
-		this->interesting = next;
-	}
+	this->interesting = NULL; // Prevent dangling pointer
 	// Free array
-	free(this->elements);
+	free(this->arr);
 
 	return NULL;
 }
 
 int pa_get(PArray* this, unsigned int index)
 {
-	return this->elements[index].value;
+	return this->arr[index].value;
 }
 
 void pa_set(PArray* this, unsigned int index, int value)
 {
-	this->elements[index].value = value;
+	this->arr[index].value = value;
 
-	if(this->test(value))
+	if(this->test(value)) // Is interesting
 	{
-		if(!this->elements[index].interesting)
+		if(!(this->arr[index].prev != NULL
+			|| this->arr[index].next != NULL)) // Is not already in list
 		{
 			// Add element to beginning of interesting list
-			DLLNode* node = malloc(sizeof(DLLNode));
-			node->index = index;
-			node->prev = NULL;
-			if(this->interesting)
+			if(this->interesting != NULL)
 			{
-				node->next = this->interesting;
-				this->interesting->prev = node;
+				this->interesting->prev = &(this->arr[index]);
+				this->arr[index].next = this->interesting;
 			}
-			else
-			{
-				node->next = NULL;
-			}
-			this->interesting = node;
-			// Point this->elements[index].interesting to added element
-			this->elements[index].interesting = node;
+			this->interesting = &(this->arr[index]);
 		}
 	}
-	else
+	else // Is not interesting
 	{
-		if(this->elements[index].interesting)
+		if(this->interesting != NULL
+		   && this->interesting->index == index) // Is list head
 		{
-			// Remove from interesting list
-			DLLNode* node = this->elements[index].interesting;
-			if(!node->prev) // Node is head
+			// Remove list head
+			this->interesting = this->arr[index].next;
+			this->arr[index].next = NULL;
+			if(this->interesting != NULL) // List still isn't empty
 			{
-				this->interesting = node->next;
-				if(node->next) // Element is not only interesting element
-				{
-					node->next->prev = NULL;
-				}
+				this->interesting->prev = NULL;
 			}
-			else
-			{
-				node->prev->next = node->next;
-				if(node->next)
-				{
-					node->next->prev = node->prev;
-				}
-			}
-			free(node);
 		}
+		else if(this->arr[index].prev != NULL) // Is elsewhere in list
+		{
+			// Remove from list
+			this->arr[index].prev->next = this->arr[index].next;
+			if(this->arr[index].next != NULL) // Is not tail
+			{
+				this->arr[index].next->prev = this->arr[index].prev;
+				this->arr[index].next = NULL;
+			}
+			this->arr[index].prev = NULL;
+		}
+		// Else is not already in list, no need to remove
 	}
 }
 
 char pa_interesting(PArray* this)
 {
-	return this->interesting ? 1 : 0;
+	return this->interesting != NULL;
 }
 
 unsigned int pa_any(PArray* this)
