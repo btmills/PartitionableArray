@@ -16,4 +16,4 @@ The partitionable array's elements are accessed just like elements of a regular 
 
 ### InterestingElement
 
-`int PartitionableArray.InterestingElement()` returns the index of an interesting element, provided one exists (which can be checked using `IsInteresting()` above). There are no gaurantees about which elements index is returned other than that it is interesting.
+`int PartitionableArray.InterestingElement()` returns the index of an interesting element, provided one exists (which can be checked using `IsInteresting()` above). There are no gaurantees about which element's index is returned other than that it is interesting.
