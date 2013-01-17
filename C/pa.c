@@ -8,9 +8,10 @@
  */
 typedef struct PAElement {
 	int value;
-	int index;
-	struct PAElement* prev;
-	struct PAElement* next;
+
+	bool interesting;
+	int prev;
+	int next;
 } PAElement;
 
 /*
@@ -20,98 +21,84 @@ typedef struct PAElement {
  * interesting.
  */
 struct PArray {
-	unsigned int capacity;
-	PAElement* interesting;
+	int length;
+	int count;
+	int sentinel;
 	char (*test)(int);
 	PAElement* arr;
 };
 
-PArray* pa_new()
-{
-	return malloc(sizeof(PArray));
-}
+PArray* pa_new() { return malloc(sizeof(PArray)); }
 
-PArray* pa_ctor(PArray* this, char (*fn)(int), unsigned int capacity)
+PArray* pa_ctor(PArray* this, char (*fn)(int), int length)
 {
-	unsigned int i;
-
-	this->capacity = capacity;
 	this->test = fn;
-	this->arr = calloc(capacity, sizeof(PAElement));
-	for(i = 0; i < capacity; i++)
-	{
-		this->arr[i].index = i;
-	}
+	this->length = length;
+	this->arr = calloc(length + 1, sizeof(PAElement)); // One extra element for sentinel
+	this->arr[length].prev = this->arr[length].next = this->sentinel = length; // Set up the sentinel
 
 	return this; // Facilitate chaining or nesting
 }
 
 void* pa_dtor(PArray* this)
 {
-	this->interesting = NULL; // Prevent dangling pointer
 	// Free array
 	free(this->arr);
+	free(this);
 
 	return NULL;
 }
 
-int pa_get(PArray* this, unsigned int index)
+int pa_len(PArray* this) { return this->length; }
+
+int pa_count(PArray* this) { return this->count; }
+
+int pa_get(PArray* this, int index)
 {
+	if(!(0 <= index && index < this->length))
+		return -1;
+
 	return this->arr[index].value;
 }
 
-void pa_set(PArray* this, unsigned int index, int value)
+void pa_set(PArray* this, int index, int value)
 {
+	if(!(0 <= index && index < this->length))
+		return;
+
 	this->arr[index].value = value;
 
+	// Update list of interesting elements
 	if(this->test(value)) // Is interesting
 	{
-		if(!(this->arr[index].prev != NULL
-			|| this->arr[index].next != NULL)) // Is not already in list
+		if(!this->arr[index].interesting) // Is not in list
 		{
-			// Add element to beginning of interesting list
-			if(this->interesting != NULL)
-			{
-				this->interesting->prev = &(this->arr[index]);
-				this->arr[index].next = this->interesting;
-			}
-			this->interesting = &(this->arr[index]);
+			// Add to list
+			this->count++;
+			this->arr[index].interesting = true;
+
+			this->arr[index].next = this->sentinel;
+			this->arr[index].prev = this->arr[this->sentinel].prev;
+			this->arr[this->arr[this->sentinel].prev].next = index;
+			this->arr[this->sentinel].prev = index;
 		}
+		// Else already in list, no need to add
 	}
 	else // Is not interesting
 	{
-		if(this->interesting != NULL
-		   && this->interesting->index == index) // Is list head
-		{
-			// Remove list head
-			this->interesting = this->arr[index].next;
-			this->arr[index].next = NULL;
-			if(this->interesting != NULL) // List still isn't empty
-			{
-				this->interesting->prev = NULL;
-			}
-		}
-		else if(this->arr[index].prev != NULL) // Is elsewhere in list
+		if(this->arr[index].interesting) // Is in list
 		{
 			// Remove from list
-			this->arr[index].prev->next = this->arr[index].next;
-			if(this->arr[index].next != NULL) // Is not tail
-			{
-				this->arr[index].next->prev = this->arr[index].prev;
-				this->arr[index].next = NULL;
-			}
-			this->arr[index].prev = NULL;
+			this->count--;
+			this->arr[index].interesting = false;
+
+			this->arr[this->arr[index].prev].next = this->arr[index].next;
+			this->arr[this->arr[index].next].prev = this->arr[index].prev;
 		}
 		// Else is not already in list, no need to remove
 	}
 }
 
-char pa_interesting(PArray* this)
-{
-	return this->interesting != NULL;
-}
+char pa_interesting(PArray* this) { return this->count > 0; }
 
-unsigned int pa_any(PArray* this)
-{
-	return this->interesting->index;
-}
+int pa_any(PArray* this) { return this->arr[this->sentinel].next; }

@@ -16,7 +16,7 @@ Pointer to memory for a PArray.
 
 ### Constructor
 
-`PArray* pa_ctor(PArray* this, bool (*fn)(int), unsigned int capacity)`
+`PArray* pa_ctor(PArray* this, bool (*fn)(int), int length)`
 
 #### Description
 
@@ -26,7 +26,7 @@ Constructs a new partitionable array with a specified evaluation function and a 
 
 - `this` An allocated but ininitialized `PArray`.
 - `fn` Function to be used to determine if an element is interesting.
-- `capacity` Number of elements the array should be able to store.
+- `length` Number of elements the array should be able to store.
 
 #### Returns
 
@@ -48,9 +48,41 @@ Destructs an array and frees its memory. Don't forget to set the array pointer t
 
 `NULL`
 
+### Length
+
+`int pa_len(PArray* this)`
+
+#### Description
+
+Gets the capacity of the array.
+
+#### Arguments
+
+- `this` The array.
+
+#### Returns
+
+The capacity of the array.
+
+### Count
+
+`int pa_count(PArray* this)`
+
+#### Description
+
+Gets the number of interesting elements in the array.
+
+#### Arguments
+
+- `this` The number of interesting elements in the array.
+
+#### Returns
+
+The capacity of the array.
+
 ### Get
 
-`int pa_get(PArray* this, unsigned int index)`
+`int pa_get(PArray* this, int index)`
 
 #### Description
 
@@ -67,7 +99,7 @@ The value at the specified index in the array.
 
 ### Set
 
-`void pa_set(PArray* this, unsigned int index, int value)`
+`void pa_set(PArray* this, int index, int value)`
 
 #### Description
 
@@ -97,7 +129,7 @@ Determines if there are any interesting elements in an array.
 
 ### Any
 
-`unsigned int pa_any(PArray* this)`
+`int pa_any(PArray* this)`
 
 #### Description
 
