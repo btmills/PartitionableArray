@@ -6,20 +6,19 @@ namespace PartitionableArray
 {
 	public class PartitionableArray<T>
 	{
+		#region Internal representation
+
 		/// <summary>
 		/// Representation of an element in the array.
 		/// </summary>			
-		private class Element
+		private struct Element
 		{
 			public T value;
-			public readonly int index; // Only way to do constant-time reverse lookup
 
 			// Keep track of this element in the list of interesting elements
-			public Element prev;
-			public Element next;
-
-			// Make sure the index gets set
-			public Element(int i) { index = i; }
+			public bool interesting;
+			public int prev;
+			public int next;
 		}
 
 		/// <summary>
@@ -30,16 +29,43 @@ namespace PartitionableArray
 		/// <summary>
 		/// List of interesting elements.
 		/// </summary>
-		private Element interesting = null;
+		private int sentinel;
+		
+		/// <summary>
+		/// Stored partition function.
+		/// </summary>
+		private PartitionFn test;
+
+		#endregion
+
+		#region Interface
 
 		/// <summary>
 		/// Given a value, decide if it is interesting.
 		/// </summary>
 		public delegate bool PartitionFn(T val);
+
+		private int length = 0;
 		/// <summary>
-		/// Stored partition function.
+		/// Gets maximum the number of elements in the array.
 		/// </summary>
-		private PartitionFn test;
+		/// <value>
+		/// The maximum number of elements in the array.
+		/// </value>
+		public int Length {
+			get { return length; }
+		}
+
+		private int count = 0;
+		/// <summary>
+		/// Gets the number of interesting elements in the array.
+		/// </summary>
+		/// <value>
+		/// The number of interesting elements in the array.
+		/// </value>
+		public int Count {
+			get { return count; }
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the PartitionableArray class.
@@ -48,16 +74,15 @@ namespace PartitionableArray
 		/// A partition function to use to determine if the elements of the
 		/// array are interesting.
 		/// </param>
-		/// <param name='capacity'>
-		/// The fixed maximum capacity of the array.
+		/// <param name='length'>
+		/// The fixed maximum number of elements in the array.
 		/// </param>
-		public PartitionableArray (PartitionFn fn, int capacity)
+		public PartitionableArray (PartitionFn fn, int length)
 		{
-			test = fn;
-			arr = new Element[capacity];
-			for (int i = 0; i < capacity; i++) {
-				arr [i] = new Element (i);
-			}
+			this.test = fn;
+			this.length = length;
+			arr = new Element[length + 1]; // One extra element for sentinel
+			arr[length].prev = arr[length].next = sentinel = length; // Set up the sentinel
 		}
 
 		/// <summary>
@@ -66,7 +91,7 @@ namespace PartitionableArray
 		/// <returns>
 		/// <c>true</c> if one or more values are interesting; otherwise, <c>false</c>.
 		/// </returns>
-		public bool IsInteresting() { return interesting != null; }
+		public bool IsInteresting() { return count > 0; }
 
 		/// <summary>
 		/// Gets the index of an interesting element.
@@ -77,7 +102,7 @@ namespace PartitionableArray
 		/// <returns>
 		/// The index of an interesting element.
 		/// </returns>
-		public int InterestingElement() { return interesting.index; }
+		public int AnyInteresting() { return arr[sentinel].next; }
 
 		/// <summary>
 		/// Gets or sets the value at a certain index in the array.
@@ -86,43 +111,48 @@ namespace PartitionableArray
 		/// The index in the array.
 		/// </param>
 		public T this[int index] {
-			get { return arr[index].value; }
+			get {
+				if(!(0 <= index && index < length)) {
+					throw new IndexOutOfRangeException();
+				}
+
+				return arr[index].value;
+			}
 			set {
+				if(!(0 <= index && index < length)) {
+					throw new IndexOutOfRangeException();
+				}
+
 				arr[index].value = value;
 
 				// Update list of interesting elements
 				if(test(value)) { // Is interesting
-					if(!(arr[index].prev != null
-					     || arr[index].next != null)) { // Is not already in list
-						// Add to interesting list
-						if(interesting != null) {
-							interesting.prev = arr[index];
-							arr[index].next = interesting;
-						}
-						interesting = arr[index];
+					if(!arr[index].interesting) { // Is not in list
+						// Add to list
+						count++;
+						arr[index].interesting = true;
+
+						arr[index].next = sentinel;
+						arr[index].prev = arr[sentinel].prev;
+						arr[arr[sentinel].prev].next = index;
+						arr[sentinel].prev = index;
 					}
+					// Else already in list, no need to add
 				} else { // Is not interesting
-					if(interesting != null
-					   && interesting.index == index) { // Is list head
-						// Remove list head
-						interesting = arr[index].next;
-						arr[index].next = null;
-						if(interesting != null) { // List is not empty
-							interesting.prev = null;
-						}
-					} else if(arr[index].prev != null) { // Elsewhere in list
+					if(arr[index].interesting) { // Is in list
 						// Remove from list
-						arr[index].prev.next = arr[index].next;
-						if(arr[index].next != null) { // Is not tail
-							arr[index].next.prev = arr[index].prev;
-							arr[index].next = null;
-						}
-						arr[index].prev = null;
+						count--;
+						arr[index].interesting = false;
+
+						arr[arr[index].prev].next = arr[index].next;
+						arr[arr[index].next].prev = arr[index].prev;
 					}
 					// Else is not already in list, no need to remove
 				}
 			}
 		}
+
+		#endregion
 	}
 }
 
