@@ -33,6 +33,8 @@ namespace PartitionableArray
 			Contract.Invariant(arr != null);
 			Contract.Invariant(arr.Length >= 1);
 			Contract.Invariant(sentinel == arr.Length - 1);
+			Contract.Invariant(Length == arr.Length - 1);
+			Contract.Invariant(0 <= Count && Count <= Length);
 		}
 
 		private void consider(int index)
@@ -121,14 +123,17 @@ namespace PartitionableArray
 				"Length must be a non-negative integer.");
 			Contract.Ensures(test == fn);
 			Contract.Ensures(Length == length);
+			Contract.Ensures(
+				// If default value is interesting, all elements are interesting
+				(test(arr[sentinel].value) && Count == length)
+				// Otherwise, no elements are interesting
+				|| Count == 0);
 
 			test = fn;
 			arr = new Element[length + 1]; // One extra element for sentinel
 			arr[sentinel].prev = arr[sentinel].next = sentinel; // Set up the sentinel
-			for (int i = 0; i < Length; i++)
-			{
+			for (int i = 0; i < Length; i++) // Check for interesting default values
 				consider(i);
-			}
 		}
 
 		/// <summary>
@@ -175,6 +180,19 @@ namespace PartitionableArray
 				Contract.Requires<IndexOutOfRangeException>(
 					0 <= index && index < Length,
 					"Index must be within array bounds.");
+				Contract.Ensures(
+					// If old and new values are interesting, Count is unchanged
+					(test(Contract.OldValue(arr[index].value))
+						&& test(arr[index].value)
+						&& Contract.OldValue(Count) == Count)
+					// If old was uninteresting and new value is interesting, Count increments
+					|| (!test(Contract.OldValue(arr[index].value))
+						&& test(arr[index].value)
+						&& Contract.OldValue(Count) + 1 == Count)
+					// If old value was interesting and new value is uninteresting, Count decrements
+					|| (test(Contract.OldValue(arr[index].value))
+						&& !test(arr[index].value)
+						&& Contract.OldValue(Count) - 1 == Count));
 				Contract.Assume(index < arr.Length);
 
 				arr[index].value = value;
