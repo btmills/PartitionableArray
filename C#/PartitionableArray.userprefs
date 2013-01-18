@@ -2,8 +2,8 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="PartitionableArray/PartitionableArray.cs">
     <Files>
-      <File FileName="PartitionableArray/PartitionableArray.cs" Line="45" Column="59" />
-      <File FileName="Test/Test.cs" Line="30" Column="1" />
+      <File FileName="PartitionableArray/PartitionableArray.cs" Line="46" Column="3" />
+      <File FileName="Test/Test.cs" Line="30" Column="78" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
