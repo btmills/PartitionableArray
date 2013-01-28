@@ -37,41 +37,56 @@ namespace PartitionableArray
 			Contract.Invariant(0 <= Count && Count <= Length);
 		}
 
+		// If an element is in the list of interesting elements, remove it
+		private void remove(int index)
+		{
+			Contract.Requires<IndexOutOfRangeException>(
+				0 <= index && index < Length,
+				"The index must be within the bounds of the array.");
+			Contract.Ensures(arr[index].interesting == false
+				|| Contract.OldValue(count) == 1 + count);
+			Contract.Ensures(arr[index].interesting == false);
+
+			if (arr[index].interesting == false) return;
+
+			count--;
+			arr[index].interesting = false;
+
+			arr[arr[index].prev].next = arr[index].next;
+			arr[arr[index].next].prev = arr[index].prev;
+		}
+
+		// If an element is interesting, add it to the list of interesting elements
+		private void add(int index)
+		{
+			Contract.Requires<IndexOutOfRangeException>(
+				0 <= index && index < Length,
+				"The index must be within the bounds of the array.");
+			Contract.Requires(arr[index].interesting == false);
+			Contract.Ensures(test(arr[index].value) == false
+				|| (arr[index].interesting == true
+					&& Contract.OldValue(count) + 1 == count));
+			Contract.Ensures(test(arr[index].value) == arr[index].interesting);
+
+			if (test(arr[index].value) == false) return;
+
+			count++;
+			arr[index].interesting = true;
+
+			arr[index].next = sentinel;
+			arr[index].prev = arr[sentinel].prev;
+			arr[arr[sentinel].prev].next = index;
+			arr[sentinel].prev = index;
+		}
+
 		private void consider(int index)
 		{
 			Contract.Requires<IndexOutOfRangeException>(
 				0 <= index && index < Length,
 				"The index must be within the bounds of the array.");
-			Contract.Assume(index < arr.Length);
 
-			if (test(arr[index].value)) // Is interesting
-			{
-				if (!arr[index].interesting) // Is not in list
-				{
-					// Add to list
-					count++;
-					arr[index].interesting = true;
-
-					arr[index].next = sentinel;
-					arr[index].prev = arr[sentinel].prev;
-					arr[arr[sentinel].prev].next = index;
-					arr[sentinel].prev = index;
-				}
-				// Else already in list, no need to add
-			}
-			else // Is not interesting
-			{
-				if (arr[index].interesting) // Is in list
-				{
-					// Remove from list
-					count--;
-					arr[index].interesting = false;
-
-					arr[arr[index].prev].next = arr[index].next;
-					arr[arr[index].next].prev = arr[index].prev;
-				}
-				// Else is not already in list, no need to remove
-			}
+			remove(index);
+			add(index);
 		}
 
 		#endregion
@@ -133,7 +148,7 @@ namespace PartitionableArray
 			arr = new Element[length + 1]; // One extra element for sentinel
 			arr[sentinel].prev = arr[sentinel].next = sentinel; // Set up the sentinel
 			for (int i = 0; i < Length; i++) // Check for interesting default values
-				consider(i);
+				add(i);
 		}
 
 		/// <summary>
