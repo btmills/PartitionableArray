@@ -7,7 +7,7 @@ namespace Test
 	{
 		public static void Main(string[] args)
 		{
-			PartitionableArray<int> arr = new PartitionableArray<int>((val) => (/*val != 0 && */val % 2 == 0), 20);
+			PartitionableArray<int> arr = new PartitionableArray<int>((val) => (val != 0 && val % 2 == 0), 20);
 			Console.WriteLine("Array contains {0} interesting elements.", arr.Count);
 
 			for (int i = 1; i < arr.Length; i++)

@@ -34,20 +34,22 @@ namespace PartitionableArray
 			Contract.Invariant(arr.Length >= 1);
 			Contract.Invariant(sentinel == arr.Length - 1);
 			Contract.Invariant(Length == arr.Length - 1);
-			Contract.Invariant(0 <= Count && Count <= Length);
+			Contract.Invariant(0 <= count);
+			Contract.Invariant(count <= Length);
+			Contract.Invariant(count < arr.Length);
+			Contract.Invariant(Count == count);
 		}
 
-		// If an element is in the list of interesting elements, remove it
+		// Remove an interesting element from the list
 		private void remove(int index)
 		{
 			Contract.Requires<IndexOutOfRangeException>(
 				0 <= index && index < Length,
 				"The index must be within the bounds of the array.");
-			Contract.Ensures(arr[index].interesting == false
-				|| Contract.OldValue(count) == 1 + count);
+			Contract.Requires(arr[index].interesting == true);
+			Contract.Requires(test(arr[index].value) == true);
 			Contract.Ensures(arr[index].interesting == false);
-
-			if (arr[index].interesting == false) return;
+			Contract.Ensures(Contract.OldValue(Count) - 1 == Count);
 
 			count--;
 			arr[index].interesting = false;
@@ -56,19 +58,16 @@ namespace PartitionableArray
 			arr[arr[index].next].prev = arr[index].prev;
 		}
 
-		// If an element is interesting, add it to the list of interesting elements
+		// Add an interesting element to the list
 		private void add(int index)
 		{
 			Contract.Requires<IndexOutOfRangeException>(
 				0 <= index && index < Length,
 				"The index must be within the bounds of the array.");
 			Contract.Requires(arr[index].interesting == false);
-			Contract.Ensures(test(arr[index].value) == false
-				|| (arr[index].interesting == true
-					&& Contract.OldValue(count) + 1 == count));
-			Contract.Ensures(test(arr[index].value) == arr[index].interesting);
-
-			if (test(arr[index].value) == false) return;
+			Contract.Requires(test(arr[index].value) == true);
+			Contract.Ensures(arr[index].interesting == true);
+			Contract.Ensures(Contract.OldValue(Count) + 1 == Count);
 
 			count++;
 			arr[index].interesting = true;
@@ -77,16 +76,6 @@ namespace PartitionableArray
 			arr[index].prev = arr[sentinel].prev;
 			arr[arr[sentinel].prev].next = index;
 			arr[sentinel].prev = index;
-		}
-
-		private void consider(int index)
-		{
-			Contract.Requires<IndexOutOfRangeException>(
-				0 <= index && index < Length,
-				"The index must be within the bounds of the array.");
-
-			remove(index);
-			add(index);
 		}
 
 		#endregion
@@ -148,7 +137,8 @@ namespace PartitionableArray
 			arr = new Element[length + 1]; // One extra element for sentinel
 			arr[sentinel].prev = arr[sentinel].next = sentinel; // Set up the sentinel
 			for (int i = 0; i < Length; i++) // Check for interesting default values
-				add(i);
+				if (test(arr[i].value))
+					add(i);
 		}
 
 		/// <summary>
@@ -197,8 +187,8 @@ namespace PartitionableArray
 					"Index must be within array bounds.");
 				Contract.Ensures(
 					// If old and new values are interesting, Count is unchanged
-					(test(Contract.OldValue(arr[index].value))
-						&& test(arr[index].value)
+					((test(Contract.OldValue(arr[index].value))
+						== test(arr[index].value))
 						&& Contract.OldValue(Count) == Count)
 					// If old was uninteresting and new value is interesting, Count increments
 					|| (!test(Contract.OldValue(arr[index].value))
@@ -210,9 +200,9 @@ namespace PartitionableArray
 						&& Contract.OldValue(Count) - 1 == Count));
 				Contract.Assume(index < arr.Length);
 
+				if (test(arr[index].value)) remove(index);
 				arr[index].value = value;
-
-				consider(index); // Update list of interesting elements
+				if (test(arr[index].value)) add(index);
 			}
 		}
 
