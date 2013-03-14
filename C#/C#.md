@@ -1,5 +1,9 @@
 The C# implementation uses the PartitionableArray class.
 
+## Code Contracts
+
+.NET Code Contracts are used experimentally. Disabling or removing them should not affect functionality.
+
 ## Usage
 
 ### Constructor
