@@ -31,3 +31,7 @@ Had I not designed it this way intentionally, these would also be known as short
 - Use generic types in C implementation (void*)
 - Get more than just most recently set interesting value
 - How is this useful?
+
+## License
+
+The MIT license. See LICENSE for full text.
