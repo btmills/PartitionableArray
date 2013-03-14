@@ -15,7 +15,7 @@ This is an implementation of an array whose elements can be classified by a func
 
 ## Implementations
 
-Two implementations have been tried so far: C and C#. See the corresponding directories for more information.
+Two implementations have been tried so far: C and C#. See the corresponding directories for more information. Note that the development on the C implementation was halted; the C# implementation is the more recent one.
 
 ## Design Tradeoffs
 

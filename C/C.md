@@ -1,3 +1,5 @@
+*This implementation is out of date. The C# implementation is more recent.*
+
 This partitionable array implementation uses a `PArray` (Partitionable Array) structure to store the array.
 
 ## Operations
